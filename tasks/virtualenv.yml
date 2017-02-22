@@ -1,0 +1,31 @@
+---
+
+- name: Install required packages
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - build-essential
+    - python-dev
+    - python-pip
+
+- name: Install core virtualenv
+  pip:
+    name: virtualenv
+
+- name: Create folder for virtualenv
+  file:
+    state: directory
+    owner: "{{ sentry_user }}"
+    group: "{{ sentry_group }}"
+    path: "{{ sentry_virtualenv_path }}"
+
+- name: Check whether virtualenv exists
+  stat:
+    path: "{{ sentry_virtualenv_path }}/bin/activate"
+  register: virtualenv_activate
+
+- name: Create the virtualenv
+  command: "virtualenv {{ sentry_virtualenv_path }} --distribute --no-site-packages"
+  become_user: "{{ sentry_user }}"
+  when: virtualenv_activate.stat.exists !=  true

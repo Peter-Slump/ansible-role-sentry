@@ -1,0 +1,34 @@
+---
+
+- name: Make sure the latest version of Supervisor
+  apt:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+      - supervisor
+  tags:
+    - "sentry"
+    - "supervisor"
+
+- name: Start Supervisor
+  service:
+    name: supervisor
+    state: started
+
+- name: Copy Supervisor template
+  template:
+    src: etc/supervisor/conf.d/sentry.conf.j2
+    dest: /etc/supervisor/conf.d/sentry.conf
+    owner: root
+    group: root
+    mode: 0640
+
+- name: Add Sentry to Supervisor
+  supervisorctl:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - sentry-web
+    - sentry-worker
+    - sentry-cron
+  notify: Restart Supervisor Sentry

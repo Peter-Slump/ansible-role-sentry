@@ -1,0 +1,19 @@
+---
+
+- name: Configure Nginx
+  template:
+    src: etc/nginx/sites-available/sentry.j2
+    dest: /etc/nginx/sites-available/sentry
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - Reload Nginx
+
+- name: Enable site configuration
+  file:
+    src: /etc/nginx/sites-available/sentry
+    dest: /etc/nginx/sites-enabled/01-{{ sentry_hostname }}
+    state: link
+  notify:
+    - Reload Nginx

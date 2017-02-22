@@ -1,0 +1,19 @@
+---
+
+- name: Configure monitoring
+  template:
+    src: etc/monit/conf-available/supervisor.j2
+    dest: /etc/monit/conf-available/supervisor
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - Reload Monit
+
+- name: Enable Monit configuration
+  file:
+    src: "/etc/monit/conf-available/supervisor"
+    dest: /etc/monit/conf-enabled/supervisor
+    state: link
+  notify:
+    - Reload Monit

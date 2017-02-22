@@ -1,0 +1,15 @@
+---
+
+- name: Create PostgreSQL role
+  postgresql_user:
+    name: "{{ sentry_database_user }}"
+    password: "{{ sentry_database_password }}"
+    state: present
+  become_user: postgres
+
+- name: Create ownCloud database
+  postgresql_db:
+    name: "{{ sentry_database_name }}"
+    owner: "{{ sentry_database_user }}"
+    state: present
+  become_user: postgres

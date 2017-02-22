@@ -1,0 +1,93 @@
+---
+
+- name: Create group
+  group:
+    name: "{{ sentry_group }}"
+    system: yes
+    state: present
+  tags: [ "sentry" ]
+
+- name: Create user
+  user:
+    name: "{{ sentry_user }}"
+    group: "{{ sentry_group }}"
+    home: "{{ sentry_home }}"
+    comment: "Sentry"
+    state: present
+  tags: [ "sentry" ]
+
+- include: virtualenv.yml
+
+- name: Install required packages
+  apt:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - 'python-setuptools'
+    - 'libxslt1-dev'
+    - 'gcc'
+    - 'libffi-dev'
+    - 'libjpeg-dev'
+    - 'libxml2-dev'
+    - 'libxslt-dev'
+    - 'libyaml-dev'
+    - 'libpq-dev'
+    - 'zlib1g-dev'
+    - 'openssl'
+    - 'libssl-dev'
+
+- name: Install required pip packages in the virtualenv
+  pip:
+    name: "{{ item }}"
+    virtualenv: "{{ sentry_virtualenv_path }}"
+    state: latest
+  with_items:
+    - 'pip'
+    - 'psycopg2'
+    - 'sentry'
+  become_user: "{{ sentry_user }}"
+
+- include: postgresql.yml
+
+- name: Create folder for conf
+  file:
+    path: "{{ sentry_home }}/.sentry/"
+    state: directory
+    owner: "{{ sentry_user }}"
+    group: "{{ sentry_group }}"
+    mode: 0750
+
+- name: Create log folder
+  file:
+    path: "{{ sentry_home }}/log"
+    state: directory
+    owner: "{{ sentry_user }}"
+    group: "{{ sentry_group }}"
+    mode: 0750
+
+- name: Copy configutration
+  template:
+    src: sentry.conf.py.j2
+    dest: "{{ sentry_home }}/.sentry/sentry.conf.py"
+    owner: "{{ sentry_user }}"
+    group: "{{ sentry_group }}"
+    mode: 0640
+  register: config
+
+- name: Copy configutration
+  template:
+    src: config.yml.j2
+    dest: "{{ sentry_home }}/.sentry/config.yml"
+    owner: "{{ sentry_user }}"
+    group: "{{ sentry_group }}"
+    mode: 0640
+  register: config
+
+- name: Upgrade sentry
+  shell: "{{ sentry_virtualenv_path }}/bin/sentry upgrade --noinput >> {{ sentry_home }}/log/sentry.log"
+  when: config.changed
+  become_user: "{{ sentry_user }}"
+
+- include: nginx.yml
+- include: supervisor.yml
+- include: monit.yml
