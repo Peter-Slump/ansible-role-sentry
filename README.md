@@ -1,6 +1,6 @@
 # Ansible role Sentry
 
-Version: 0.0.0
+Version: 0.0.1
 
 Supported OS: Ubuntu
 
@@ -32,7 +32,7 @@ sentry_secret_key: ChangeMeIAmInsecure
 sentry_superuser_username: admin
 
 sentry_port: 9004
-sentry_listen_address: 0.0.0.0
+sentry_listen_address: 0.0.1.0
 
 sentry_use_letsencrypt: False
 sentry_use_self_signed_ssl: False
